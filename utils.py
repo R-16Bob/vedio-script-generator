@@ -47,4 +47,5 @@ def generate_script(subject, video_length, creativity, api_key):
     script = script_chain.invoke({"title": title, "duration": video_length}).content
     return title, script
 
-print(generate_script("呼啸山庄", 1, 0.7, os.getenv("OPENAI_API_KEY")))
+if __name__ == "__main__":
+    print(generate_script("呼啸山庄", 1, 0.7, os.getenv("OPENAI_API_KEY")))
