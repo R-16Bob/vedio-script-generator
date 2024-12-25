@@ -3,8 +3,9 @@ import os
 
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_community.utilities import WikipediaAPIWrapper
-def generate_script(subject, video_length, creativity, api_key):
+def generate_script(subject, video_length, creativity, model_name, api_key="000"):
     '''
     :returns
     1. 获取视频标题
@@ -32,7 +33,10 @@ def generate_script(subject, video_length, creativity, api_key):
          ]
     )
     # 获取模型
-    model = ChatOpenAI(model="gpt-4o-mini",api_key=api_key, temperature=creativity, base_url="https://api.aigc369.com/v1")
+    if "gpt" in model_name:
+        model = ChatOpenAI(model="gpt-4o-mini",api_key=api_key, temperature=creativity, base_url="https://api.aigc369.com/v1")
+    else:
+        model = ChatOllama(model=model_name,  temperature=creativity)
     # chain，使用LangChain表达式语言
     title_chain = title_template | model
     script_chain = script_template | model
@@ -44,8 +48,12 @@ def generate_script(subject, video_length, creativity, api_key):
 
     # script = script_chain.invoke({"title": title, "duration": video_length, "wikipedia_search": search_result}).content
     # return title, search_result, script
-    script = script_chain.invoke({"title": title, "duration": video_length}).content
-    return title, script
+    # script = script_chain.invoke({"title": title, "duration": video_length}).content
+    chain_stream = script_chain.stream({"title": title, "duration": video_length})
+    return title, chain_stream
 
 if __name__ == "__main__":
-    print(generate_script("呼啸山庄", 1, 0.7, os.getenv("OPENAI_API_KEY")))
+    title, stream=generate_script("呼啸山庄", 0.6, 0.7, "glm4", os.getenv("OPENAI_API_KEY"))
+    print(title)
+    for chunk in stream:
+        print(chunk.content, end="", flush=True)
